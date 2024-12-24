@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  php:
+    build:
+      context: ./
+    container_name: laravel-php
+    networks:
+      - web
+    volumes:
+      - ./app:/var/www
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:1.19.0
+    container_name: laravel-nginx
+    restart: always
+    networks:
+      - web
+    links:
+      - php
+    ports:
+      - "80:80"
+    volumes:
+      - ./app:/var/www
+      - ./docker/Nginx/core:/etc/nginx/conf.d
+      - ./docker/Nginx/logs:/var/log/nginx/
+
+  db:
+    image: postgres:latest
+    container_name: laravel-db
+    networks:
+      - web
+    environment:
+      POSTGRES_USER: laravel
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: laravel
+    volumes:
+      - /opt/postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: laravel-db-admin
+    networks:
+      - web
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+
+volumes:
+  db_data:
+networks:
+  web:
+    external: true
